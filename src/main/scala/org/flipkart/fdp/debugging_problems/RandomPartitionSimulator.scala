@@ -18,8 +18,10 @@ package org.flipkart.fdp.debugging_problems
 
 import org.apache.spark.TaskContext
 import org.apache.spark.sql.Row
+import org.slf4j.{Logger, LoggerFactory}
 
 trait RandomPartitionSimulator extends ProblemsBase {
+  val log: Logger
 
   // Pick a random partition
   val randPartitionId: Int = scala.util.Random.nextInt(10)
@@ -27,9 +29,10 @@ trait RandomPartitionSimulator extends ProblemsBase {
   def runPartition(x: Iterator[Row]): Unit
 
   override def run(): Unit = {
-    println("RandPartition: " + randPartitionId)
+    log.info("RandPartition: " + randPartitionId)
     val df = getRandomDFWithPartitions(10)
     df.foreachPartition(x => {
+      log.info("PARTITION: RandPartition: " + randPartitionId + ": " + TaskContext.get.partitionId())
       if(TaskContext.get.partitionId() == randPartitionId)
         runPartition(x)
       else

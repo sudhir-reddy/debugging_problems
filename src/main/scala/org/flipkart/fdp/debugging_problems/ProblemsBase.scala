@@ -16,7 +16,8 @@
 
 package org.flipkart.fdp.debugging_problems
 
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.types.{IntegerType, StructField, StructType}
+import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 
 import scala.util.Random
 
@@ -25,7 +26,8 @@ trait ProblemsBase extends Serializable {
 
   def getSparkSession: SparkSession = {
     SparkSession.builder()
-      .master("local[10]")
+      .master("yarn")
+      .config("spark.yarn.maxAppAttempts", "1")
       .appName("Debug Session Examples run by " + System.getenv("USER"))
       // --conf 'spark.executor.extraJavaOptions=-XX:+HeapDumpOnOutOfMemoryError -Xmx512m -XX:HeapDumpPath=/tmp/ -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Xloggc:/tmp/ExampleLauncher-gc.log'
       // --conf 'spark.driver.extraJavaOptions=-XX:+HeapDumpOnOutOfMemoryError -Xmx512m -XX:HeapDumpPath=/tmp/ -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Xloggc:/tmp/ExampleLauncher-gc.log'
@@ -33,8 +35,13 @@ trait ProblemsBase extends Serializable {
   }
 
   def getRandomDF: DataFrame = {
-    val data = 1 to 100 map(x =>  (1+Random.nextInt(100), 1+Random.nextInt(100), 1+Random.nextInt(100)))
-    getSparkSession.createDataFrame(data).toDF("col1", "col2", "col3")
+    val data = 1 to 100 map(x =>  Row(1+Random.nextInt(100), 1+Random.nextInt(100), 1+Random.nextInt(100)))
+    val schema = new StructType().add(StructField("col1", IntegerType, nullable = false))
+        .add(StructField("col2", IntegerType, nullable = false))
+        .add(StructField("col3", IntegerType, nullable = false))
+    val sparkSession = getSparkSession
+    val rdd = sparkSession.sparkContext.parallelize(data, 10)
+    sparkSession.sqlContext.createDataFrame(rdd, schema)
   }
 
   def getRandomDFWithPartitions(partitionsCount: Int) : DataFrame = {

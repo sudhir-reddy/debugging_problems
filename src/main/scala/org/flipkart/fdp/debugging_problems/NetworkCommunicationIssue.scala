@@ -34,7 +34,7 @@ class NetworkCommunicationIssue extends RandomPartitionSimulator {
 
   override def run(): Unit = {
     val serverSocket = openServerSocket
-    serverIP = serverSocket.getInetAddress.getHostAddress
+   // serverIP = serverSocket.getInetAddress.getHostAddress
     serverPort = serverSocket.getLocalPort
     super.run() // Do Random Partitions
   }
@@ -51,11 +51,12 @@ class NetworkCommunicationIssue extends RandomPartitionSimulator {
     new Thread("ClientThread") {
       @Override
       override def run(): Unit = {
+        log.info("Connecting to server : " + serverIP + ":" + serverPort)
         val clientSocket = new Socket(serverIP, serverPort)
         setName("ClientThread-" + clientSocket.getInetAddress + ":" + clientSocket.getLocalPort)
         val in = new ObjectInputStream(new DataInputStream(clientSocket.getInputStream))
         val out = new ObjectOutputStream(new DataOutputStream(clientSocket.getOutputStream))
-        for(i <- 0 until 600){
+        for(i <- 0 until 600000){
           reportHealth(in, out, partitionId, isHealthy)
           if(isHealthy) {
             log.info("Processing Data")
@@ -63,7 +64,8 @@ class NetworkCommunicationIssue extends RandomPartitionSimulator {
           }
           else {
             log.error("Failed to process Data")
-            Thread.sleep(1000)
+            Thread.sleep(5000)
+            log.error("WAKE:Failed to process Data")
           }
         }
         if(isHealthy)
@@ -76,13 +78,14 @@ class NetworkCommunicationIssue extends RandomPartitionSimulator {
         clientSocket.close()
       }
     }.start()
+    Thread.sleep(1000*60*5)
   }
 
   def reportHealth(in: ObjectInputStream, out: ObjectOutputStream, partitionId:Int, bool: Boolean): Unit = {
-    out.writeUTF(partitionId + " is healthy")
+    out.writeUTF("{\"healthCheck\": \"" + partitionId + " is healthy\"}")
     out.flush()
     val response = in.readUTF()
-    if(response != "OK")
+    if(response != "{\"healthCheck\": \"OK\"}")
       log.error("Something is wrong ! Health Check Ping Failed !")
   }
 
@@ -91,9 +94,9 @@ class NetworkCommunicationIssue extends RandomPartitionSimulator {
     while(! finished) {
       val healthCheckStatus = in.readUTF()
       if (healthCheckStatus != null && healthCheckStatus.contains(randPartitionId.toString))
-        out.writeUTF("Unknown Client:" + randPartitionId)
+        out.writeUTF("{\"healthCheck\": \"Unknown Client: " + randPartitionId + "\"}")
       else
-        out.writeUTF("OK")
+        out.writeUTF("{\"healthCheck\": \"OK\"}")
       out.flush()
       if(healthCheckStatus != null && healthCheckStatus.contains("BYE"))
         finished = true
@@ -106,7 +109,7 @@ class NetworkCommunicationIssue extends RandomPartitionSimulator {
     new Thread("Server") {
       @Override
       override def run(): Unit = {
-        log.info("Server Started on " + serverSocket.getInetAddress + ":" + serverSocket.getLocalPort)
+        log.info("Server Started on " + serverSocket.getInetAddress.getHostAddress + ":" + serverSocket.getLocalPort)
         log.info("Accepting Connections...")
         for(i <- 0 until 6000) {
           ServerWorkerThread(serverSocket.accept()).start()

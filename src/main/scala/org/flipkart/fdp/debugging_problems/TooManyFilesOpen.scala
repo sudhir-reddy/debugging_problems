@@ -19,10 +19,13 @@ package org.flipkart.fdp.debugging_problems
 import java.io.{BufferedReader, File, FileReader}
 
 import org.apache.spark.sql.Row
+import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable.ListBuffer
 
 class TooManyFilesOpen extends RandomPartitionSimulator {
+
+  val log: Logger = LoggerFactory.getLogger(classOf[TooManyFilesOpen])
 
   override def runPartition(x: Iterator[Row]): Unit = {
     var filesMap: ListBuffer[BufferedReader] = new ListBuffer[BufferedReader]()
@@ -33,11 +36,12 @@ class TooManyFilesOpen extends RandomPartitionSimulator {
       } catch {
         case x: Throwable =>
           isTriggered = true
-          println("Something gone wrong !!")
-          //println("Failed with exception:" + x)
+          log.error("Something gone wrong !!")
+          log.debug("Failed with exception:" + x, x)
       }
     }
     Thread.sleep(100000)
+    filesMap.foreach(x => x.close())
     throw new RuntimeException("Failed to process data")
   }
 

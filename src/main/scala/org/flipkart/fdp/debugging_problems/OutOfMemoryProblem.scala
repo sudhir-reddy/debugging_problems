@@ -32,7 +32,7 @@ class OutOfMemoryProblem extends RandomPartitionSimulator {
     var oom = false
     var error: Error = null
     while(! oom) {
-      val size = 1000000000
+      val size = 1024*1024*1024
       try {
         val data = collection.mutable.ArrayBuffer.fill(size)(UUID.randomUUID().toString)
         mapOfObjects.put(UUID.randomUUID().toString, new HMO(data))
@@ -47,5 +47,9 @@ class OutOfMemoryProblem extends RandomPartitionSimulator {
     Thread.sleep(60000)
   }
 // Huge Memory Object
-  class HMO(data: ArrayBuffer[String])
+  class HMO(data: ArrayBuffer[String]) {
+    def print(): Unit = {
+      log.info("Data:" + data)
+    }
+  }
 }

@@ -22,8 +22,11 @@ import java.util.concurrent.locks.ReentrantLock
 
 import org.apache.spark.TaskContext
 import org.apache.spark.sql.Row
+import org.slf4j.{Logger, LoggerFactory}
 
 class DeadlockSimulator extends RandomPartitionSimulator {
+
+  val log: Logger = LoggerFactory.getLogger(classOf[DeadlockSimulator])
 
   override def runPartition(x: Iterator[Row]): Unit = {
     val account1 = new Account(UUID.randomUUID().toString, 1000000)
@@ -57,12 +60,12 @@ class DeadlockSimulator extends RandomPartitionSimulator {
           val threadMXBean = ManagementFactory.getThreadMXBean
           ids = threadMXBean.findDeadlockedThreads
         }
-        throw new RuntimeException("Something gone wrong !!")
-        //println("SOmething gone wrong !!")
+        log.error("Something gone wrong !!")
+        //throw new RuntimeException("Something gone wrong !!")
       }
     }.start()
-    Thread.sleep(2*60*1000)
-    if(randPartitionId == TaskContext.getPartitionId())
+    Thread.sleep(5*60*1000)
+   if(randPartitionId == TaskContext.getPartitionId())
       throw new RuntimeException("Failed to do the transactions !")
   }
 
@@ -89,12 +92,12 @@ class DeadlockSimulator extends RandomPartitionSimulator {
     }
 
     def transferFrom(fromAccount: Account, amount: Long): Unit = {
-      println("Transferring Rs." + amount + " from: " + fromAccount.accountId + " to: " + this.accountId)
+      log.info("Transferring Rs." + amount + " from: " + fromAccount.accountId + " to: " + this.accountId)
       fromAccount.lock.lock()
       this.lock.lock()
       try {
         credit(fromAccount.debit(amount))
-        println("Transfer complete")
+        log.info("Transfer complete")
       }
       finally {
         this.lock.unlock()
