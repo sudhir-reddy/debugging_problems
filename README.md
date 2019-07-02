@@ -18,7 +18,7 @@ Since Spark can run locally, you can get these running on your local setup or ev
 ## Build
 `mvn package`
 
-This builds the jar, it obfuscates the class names of the problems, so that the developer does not know which problem he is debugging.
+This builds the jar and obfuscates the class names of the problems, so that the developer does not know which problem he is debugging.
 
 ## Usage
 To run this on YARN, copy the jar built above and the `run_examples.sh` script to the gateway node and run below command
