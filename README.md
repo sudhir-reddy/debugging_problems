@@ -29,5 +29,9 @@ Can give problem number from 1 to 4 as of now. See the mapping of the problem nu
 
 To run locally, can launch the `org.flipkart.fdp.debugging_problems.ExampleLauncher` class with the right arguments.
 
+## Debugging
+Look at the failures in the Spark executor logs and identify the issue which is causing this to fail. 
+Code should not be provided to the developers as it will become very easy to solve the problems.
+
 ## Adding More Scenarios
 Create a new class and add it to `org.flipkart.fdp.debugging_problems.ExampleLauncher.problems`
