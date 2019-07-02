@@ -34,5 +34,5 @@ Look at the failures in the Spark executor logs and identify the issue which is 
 Use various tools mentioned in the _Prerequisites_ section to identify the problem.
 Code should not be provided to the developers as it will become very easy to solve the problems.
 
-## Adding More Scenarios
+## Contributing More Scenarios
 Create a new class and add it to `org.flipkart.fdp.debugging_problems.ExampleLauncher.problems`
